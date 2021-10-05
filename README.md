@@ -10,3 +10,8 @@ AD5593R ad5593r("/dev/i2c-1", AD5593R_BUS_BASE_ADDR, a0); // Replace AD5593R_BUS
 ```
 
 Custom function "init()" has also been added, this is just so we can see if the i2c connection was opened successfully.
+
+Compiled using:
+```
+g++ -o main main.cpp AD5593R.cpp -lwiringPi
+```
