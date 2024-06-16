@@ -87,6 +87,13 @@ bool AD5593R::init() {
         return false;
     }
 
+    //Check its answering
+    uint8_t check = ad5593r_write(_ADAC_ADC_SEQUENCE, 0x02, uint8_t(1 << 1));
+    if (check != 0) {
+         AD5593R_PRINTLN("Device Unresponsive Communication Error");
+         return false;
+    }
+
     return true;
 }
 
