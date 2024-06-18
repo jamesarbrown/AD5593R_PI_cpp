@@ -168,6 +168,7 @@ private:
     uint16_t ad5593r_read(uint8_t addr);
     void ad5593r_print(std::string data);
     void ad5593r_print(uint8_t data);
+    void ad5593r_print(int data);
     void ad5593r_print(float data);
     void ad5593r_println(std::string data);
 
