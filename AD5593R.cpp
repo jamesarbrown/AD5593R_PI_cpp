@@ -40,9 +40,8 @@ extern "C" {
 #define _ADAC_DAC_WRITE         0b00010000
 #define _ADAC_ADC_READ          0b01000000
 #define _ADAC_DAC_READ          0b01010000
-#define _ADAC_GPIO_READ         0b01110000
-#define _ADAC_REG_READ          0b01100000
-
+#define _ADAC_GPIO_READ         0b01100000
+#define _ADAC_REG_READ          0b01110000
 
 
 //Class constructor
@@ -53,6 +52,8 @@ AD5593R::AD5593R(const char* i2c_device_filepath, uint8_t i2c_addr, int a0): i2c
     _GPRC_lsbs = 0x00;
     _PCR_msbs = 0x00;
     _PCR_lsbs = 0x00;
+    _GPO_states = 0x00;
+
     //intializing the configuration struct.
     for (unsigned int i = 0; i < _num_of_channels; i++) {
         config.ADCs[i] = 0;
@@ -135,7 +136,7 @@ uint16_t AD5593R::ad5593r_read(uint8_t addr) {
     uint8_t lsb = data >> 8;
     uint16_t reg_val = (msb << 8) + lsb;
 
-	return reg_val;
+    return reg_val;
 }
 
 
@@ -418,7 +419,7 @@ float* AD5593R::read_ADCs() {
 
 void AD5593R::configure_GPI(uint8_t channel) {
     if (_a0 > -1) digitalWrite(_a0, LOW);
-    config.DACs[channel] = 1;
+    config.GPIs[channel] = 1;
     uint8_t channel_byte = 1 << channel;
     //check to see if the channel is a gpi already
     if ((_GPI_config & channel_byte) != channel_byte) {
@@ -465,18 +466,23 @@ void AD5593R::configure_GPOs(bool* channels) {
     }
 }
 
-
 bool* AD5593R::read_GPIs() {
     if (_a0 > -1) digitalWrite(_a0, LOW);
-
     uint16_t data_bits = ad5593r_read(_ADAC_GPIO_READ);
-    // We don't need the first bit, as it just informs us of the pin that returned a voltage.
-    data_bits &= 0x0fff;
-    
+
+    // We don't need the first 2 bytes, as it just informs us of the pin that returned a voltage.
+    data_bits &= 0x00ff;
     if (_a0 > -1) digitalWrite(_a0, HIGH);
-    for (size_t i = 0; i < _num_of_channels; i++) {
+
+    for (uint8_t i = 0; i < _num_of_channels; i++) {
         if (config.GPIs[i] == 1) {
             values.GPI_reads[i] = bool(data_bits & 0x01);
+
+            AD5593R_PRINT("Channel ");
+            AD5593R_PRINT(i);
+            AD5593R_PRINT(" GPI reads ");
+            AD5593R_PRINT(data_bits >> i & 0x01);
+            AD5593R_PRINTLN("");
         }
         data_bits >> 1;
     }
@@ -484,24 +490,31 @@ bool* AD5593R::read_GPIs() {
     return values.GPI_reads;
 }
 
-void AD5593R::write_GPOs(bool* pin_states) {
-    uint8_t data_bits = 0;
-    for (uint8_t i = 0; i < _num_of_channels; i++) {
-        if (config.GPOs[i] == 1) {
-            values.GPO_writes[i] = pin_states[i];
-            data_bits = data_bits ^ (pin_states[i] << i);
+int AD5593R::write_GPO(uint8_t channel, bool state) {
+    //error checking
+    if (config.GPOs[channel] == 0) {
+        AD5593R_PRINT("ERROR! Channel ");
+        AD5593R_PRINT(channel);
+        AD5593R_PRINTLN(" is not a GPO");
+        return -1;
+    }
 
-            AD5593R_PRINT("Channel ");
-            AD5593R_PRINT(i);
-            AD5593R_PRINT(" GPO switched to ");
-            AD5593R_PRINT(data_bits >> i & 0x01);
-            AD5593R_PRINTLN("");
-        }
-    }
     if (_a0 > -1) digitalWrite(_a0, LOW);
-    uint8_t reply = ad5593r_write(_ADAC_GPIO_WR_DATA, 0x00, data_bits);
-    if ( reply != 0 ) {
-        AD5593R_PRINTLN("Could not Set GPO");
+    uint8_t data_bits = state << channel;
+
+    if ((_GPO_states & data_bits) != data_bits) {
+        _GPO_states = _GPO_states ^ data_bits;
     }
+
+    AD5593R_PRINT("Channel ");
+    AD5593R_PRINT(channel);
+    AD5593R_PRINT(" GPO switched to ");
+    AD5593R_PRINT(state);
+    AD5593R_PRINTLN("");
+
+    uint8_t reply = ad5593r_write(_ADAC_GPIO_WR_DATA, 0x00, _GPO_states);
     if (_a0 > -1) digitalWrite(_a0, HIGH);
+
+    return 1;
 }
+
