@@ -133,8 +133,7 @@ public:
 
     bool* read_GPIs();
     void write_GPOs(bool* pin_states);
-
-
+    int write_GPO(uint8_t, bool);
 
     /*
 
@@ -168,6 +167,7 @@ private:
     uint16_t ad5593r_read(uint8_t addr);
     void ad5593r_print(std::string data);
     void ad5593r_print(uint8_t data);
+    void ad5593r_print(int data);
     void ad5593r_print(float data);
     void ad5593r_println(std::string data);
 
@@ -191,6 +191,9 @@ private:
     //general purpose control register data Bytes
     uint8_t _GPRC_msbs;
     uint8_t _GPRC_lsbs;
+
+    //GPO states
+    uint8_t _GPO_states;
 
     // power control register data bytes;
     uint8_t _PCR_msbs;

@@ -3,8 +3,10 @@
 
 
 AD5593R ad5593r("/dev/i2c-1");
-bool my_DACs[8] = {1,1,1,1,0,0,0,0};
-bool my_ADCs[8] = {0,0,0,0,1,1,1,1};
+bool my_DACs[8]     = {1,1,1,1,0,0,0,0};
+bool my_ADCs[8]     = {0,0,0,0,1,1,0,0};
+bool my_GPOs[8]     = {0,0,0,0,0,0,1,0};
+bool my_GPIs[8]     = {0,0,0,0,0,0,0,1};
 
 int main(int argc, char** argv) 
 { 
@@ -24,4 +26,8 @@ int main(int argc, char** argv)
     ad5593r.write_DAC(3, 5);
     ad5593r.configure_ADCs(my_ADCs);
     ad5593r.read_ADCs();
+    ad5593r.configure_GPOs(my_GPOs);
+    ad5593r.write_GPO(6, 1);
+    ad5593r.configure_GPIs(my_GPIs);
+    ad5593r.read_GPIs();
 }
