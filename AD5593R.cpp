@@ -500,10 +500,11 @@ int AD5593R::write_GPO(uint8_t channel, bool state) {
     }
 
     if (_a0 > -1) digitalWrite(_a0, LOW);
-    uint8_t data_bits = state << channel;
 
-    if ((_GPO_states & data_bits) != data_bits) {
-        _GPO_states = _GPO_states ^ data_bits;
+    if (state == 1) {
+        _GPO_states |= 1 << channel;
+    } else {
+        _GPO_states &= ~(1 << channel);
     }
 
     AD5593R_PRINT("Channel ");
