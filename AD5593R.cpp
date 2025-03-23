@@ -476,7 +476,7 @@ bool* AD5593R::read_GPIs() {
 
     for (uint8_t i = 0; i < _num_of_channels; i++) {
         if (config.GPIs[i] == 1) {
-            values.GPI_reads[i] = bool(data_bits & 0x01);
+            values.GPI_reads[i] = bool(data_bits >> i & 0x01);
 
             AD5593R_PRINT("Channel ");
             AD5593R_PRINT(i);
